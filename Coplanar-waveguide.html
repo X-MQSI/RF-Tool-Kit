@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>共面波导传输线设计器</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --accent: #059669;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 1.5rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .visual-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .visual-area img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .field label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #64748b;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding-right: 8px;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            outline: none;
+            font-size: 0.95rem;
+            background: transparent;
+        }
+
+        .unit {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            white-space: nowrap;
+            margin-left: 4px;
+        }
+
+        .calc-section {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .calc-row {
+            display: grid;
+            grid-template-columns: 1.2fr 80px 1.2fr;
+            align-items: end;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            height: 42px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover { opacity: 0.9; }
+
+        .result-input {
+            background: #ecfdf5 !important;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* 材料表 */
+        .material-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            background: #fff;
+            border: 1px solid var(--border);
+        }
+
+        .material-table th, .material-table td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: center;
+        }
+
+        .material-table th { background: #f8fafc; color: #64748b; }
+
+        /* 底部状态栏卡片样式 */
+        .footer-stats { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; 
+            margin-top: 20px; 
+            padding: 20px; 
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+        .stat-item { font-size: 0.85rem; text-align: center; }
+        .stat-item label { color: #64748b; display: block; margin-bottom: 6px; font-weight: 600; }
+        .stat-item span { font-weight: 700; color: var(--text-main); font-size: 1rem; }
+
+        /* 页脚署名样式 */
+        footer {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 1rem;
+            color: #94a3b8;
+            border-top: 1px dashed #e2e8f0; /* 虚线分割线 */
+            padding-top: 20px;
+        }
+
+        footer a {
+            color: #2563eb;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-divider {
+            color: #e2e8f0;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>共面波导 (CPW) 传输线设计器</h1>
+
+    <div class="main-layout">
+        <div class="visual-area">
+            <p style="color:#64748b; font-size: 0.8rem;">共面波导传输线结构</p>
+            <div style="width:300px; height:150px; border:2px dashed #cbd5e1; display:flex; align-items:center; justify-content:center; text-align:center; font-size:0.7rem;">
+                <img src="image/Coplanar-waveguide.gif" alt="共面波导" style="max-width:100%; max-height:100%;">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="field">
+                <label>εr (介电常数)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="er" value="4.5" step="1">
+                </div>
+            </div>
+            <div class="field">
+                <label>h (介质厚度)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="h" value="1.6" step="1">
+                    <span class="unit">mm</span>
+                </div>
+            </div>
+            <div class="field">
+                <label>w (传输线宽)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="w_input" value="1.0" step="1">
+                    <span class="unit">mm</span>
+                </div>
+            </div>
+            <div class="field">
+                <label>t (铜箔厚度)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="t" value="35" step="1">
+                    <span class="unit">µm</span>
+                </div>
+            </div>
+            <div class="field" style="grid-column: span 2;">
+                <label>f₀ (中心频率)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="f" value="" step="1">
+                    <span class="unit">MHz</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="material-table">
+        <thead>
+            <tr><th>常用材料</th><th>FR-4</th><th>Rogers 4350B</th><th>PTFE (聚四氟乙烯)</th><th>Air (空气)</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><b>介电常数 εr</b></td><td>4.4 ~ 4.6</td><td>3.66</td><td>2.1</td><td>1.0</td></tr>
+        </tbody>
+    </table>
+
+    <div class="calc-section">
+        <div class="calc-row">
+            <div class="field">
+                <label>缝隙宽度 s</label>
+                <div class="input-wrapper">
+                    <input type="number" id="s_val" placeholder="输入缝隙宽度 s">
+                    <span class="unit">mm</span>
+                </div>
+            </div>
+            <button class="btn" onclick="runAna()">分析</button>
+            <div class="field">
+                <label>特性阻抗 Z₀</label>
+                <div class="input-wrapper result-input">
+                    <input type="text" id="Z0" readonly>
+                    <span class="unit" style="color:inherit">Ω</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="calc-row">
+            <div class="field">
+                <label>目标阻抗 Z₀</label>
+                <div class="input-wrapper">
+                    <input type="number" id="z_target" placeholder="输入目标阻抗 Z₀">
+                    <span class="unit">Ω</span>
+                </div>
+            </div>
+            <button class="btn" style="background:var(--accent)" onclick="runSyn()">综合</button>
+            <div class="field">
+                <label>建议缝隙 s</label>
+                <div class="input-wrapper result-input">
+                    <input type="text" id="s_res" readonly>
+                    <span class="unit" style="color:inherit">mm</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-stats">
+        <div class="stat-item">
+            <label>有效介电常数 εr eff</label>
+            <span id="eff">-</span>
+        </div>
+        <div class="stat-item">
+            <label>相速度系数 Vp/c</label>
+            <span id="kz">-</span>
+        </div>
+        <div class="stat-item">
+            <label>λ/4 四分之一波长</label>
+            <div><span id="l4" style="color:var(--primary-color)">-</span> <small class="unit">mm</small></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <a href="./">Home</a>
+    <span class="footer-divider">|</span>
+    <span>By BG7ZDQ</span>
+    <span class="footer-divider">|</span>
+    <a href="https://github.com/X-MQSI/RF-Tool-Kit" target="_blank">Github</a>
+</footer>
+
+<script>
+const PI = Math.PI;
+
+function getV(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function setV(id, val) {
+    const el = document.getElementById(id);
+    const formatted = typeof val === 'number' ? val.toFixed(6) : val;
+    if(el.tagName === 'SPAN') el.innerText = formatted;
+    else el.value = formatted;
+}
+
+// 核心计算引擎
+function calculateCore(e0, w0, s0, t0_um, h0, f0) {
+    let t0 = t0_um * 1e-3;
+    let a0 = w0;
+    let b0 = w0 + s0*2;
+    
+    let k1 = Math.log(4 * PI * a0 / t0);
+    let k2 = 1.25 * t0 / PI;
+    let at = a0 + k2 * (1 + k1);
+    let bt = b0 - k2 * (1 + k1);
+    let kt = at / bt;
+    let ktd = Math.sqrt(1 - kt * kt);
+    let skt = Math.sqrt(kt);
+    let sktd = Math.sqrt(ktd);
+    
+    let k = a0 / b0;
+    let kd = Math.sqrt(1 - k * k);
+    let sk = Math.sqrt(k);
+    let skd = Math.sqrt(kd);
+    
+    let k3 = PI * at / (4 * h0);
+    let k4 = PI * bt / (4 * h0);
+    let k1x = (Math.sinh(k3)) / (Math.sinh(k4));
+    let k1y = Math.sqrt(1 - k1x * k1x);
+    let sk1 = Math.sqrt(k1x);
+    let sk1d = Math.sqrt(k1y);
+
+    let kk = k < 0.7 ? 1 / (Math.log(2 * (1 + skd) / (1 - skd)) / PI) : Math.log(2 * (1 + sk) / (1 - sk)) / PI;
+    let kk1 = k1x < 0.7 ? 1 / (Math.log(2 * (1 + sk1d) / (1 - sk1d)) / PI) : Math.log(2 * (1 + sk1) / (1 - sk1)) / PI;
+    let kkt = kt < 0.7 ? 1 / (Math.log(2 * (1 + sktd) / (1 - sktd)) / PI) : Math.log(2 * (1 + skt) / (1 - skt)) / PI;
+
+    let ef = 1 + (e0 - 1) / 2 * kk1 / kk;
+    let eft = ef - (ef - 1) / ((b0 - a0) / (1.4 * t0) * kk + 1);
+    let z = 30 * PI / (kkt * Math.sqrt(eft));
+    let kz = 1 / Math.sqrt(eft);
+    let l4 = 30 * 1e10 * kz / (f0 * 1e6 * 4);
+
+    return { z, eft, kz, l4 };
+}
+
+function runAna() {
+    // 对应 UI: w_input 为线宽, s_val 为缝隙
+    const res = calculateCore(getV('er'), getV('w_input'), getV('s_val'), getV('t'), getV('h'), getV('f'));
+    setV('Z0', res.z);
+    setV('eff', res.eft);
+    setV('kz', res.kz);
+    setV('l4', res.l4);
+}
+
+function runSyn() {
+    let e0 = getV('er'), w_fixed = getV('w_input'), t0 = getV('t'), h0 = getV('h'), f0 = getV('f'), z_target = getV('z_target');
+    
+    let s_test = 0.2; // 初始尝试缝隙
+    let step = z_target > 60 ? 0.1 : 0.02;
+    let direction = 0; 
+    let final_res;
+
+    // 迭代计算
+    for(let i=0; i<1000; i++) {
+        final_res = calculateCore(e0, w_fixed, s_test, t0, h0, f0);
+        let err = final_res.z - z_target;
+        if (Math.abs(err) < 0.001) break;
+
+        if (direction === 0) { direction = err > 0 ? 1 : -1; } // 阻抗大则需要增加缝隙
+        
+        if (err > 0) { // 阻抗太高，需减小s (在CPW中s减小通常Z降低)
+             s_test -= step;
+             if(direction === -1) { step /= 2; direction = 1; }
+        } else { // 阻抗太低，需增大s
+             s_test += step;
+             if(direction === 1) { step /= 2; direction = -1; }
+        }
+        if(s_test <= 0) s_test = 0.001;
+    }
+
+    setV('s_res', s_test);
+    setV('eff', final_res.eft);
+    setV('kz', final_res.kz);
+    setV('l4', final_res.l4);
+}
+</script>
+
+</body>
+</html>
